@@ -9,7 +9,8 @@
 #define DEBUG
 
 #define PORTNUM    53
-#define PARENT_DNS "8.8.8.8"
+#define DNS_IP     "127.0.0.1"
+#define DNS_PARENT "8.8.8.8"
 
 unsigned char buf[0xFFF];
 
@@ -62,7 +63,7 @@ void loop(int sockfd)
 	memset((char *) &out_addr, 0, sizeof(out_addr));
 	out_addr.sin_family = AF_INET;
 	out_addr.sin_port   = htons(PORTNUM);
-	inet_aton(PARENT_DNS, (struct in_addr *)&out_addr.sin_addr.s_addr);
+	inet_aton(DNS_PARENT, (struct in_addr *)&out_addr.sin_addr.s_addr);
 	out_socket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (out_socket < 0) error("ERROR opening socket out");
 
@@ -124,7 +125,7 @@ int main(int argc, char **argv)
 	// bind
 	memset((char *) &serveraddr, 0, sizeof(serveraddr));
 	serveraddr.sin_family      = AF_INET;
-	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	inet_aton(DNS_IP, (struct in_addr *)&serveraddr.sin_addr.s_addr);
 	serveraddr.sin_port        = htons(PORTNUM);
 	if (bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(struct sockaddr_in)) < 0)
 		error("ERROR on binding");
