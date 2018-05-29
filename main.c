@@ -12,22 +12,10 @@
 #define DNS_IP     "127.0.0.1"
 #define DNS_PARENT "8.8.8.8"
 
+#include "log.c"
+#include "cache.c"
+
 unsigned char buf[0xFFF];
-
-void log_s(char *msg)
-{
-#ifdef DEBUG
-	printf("%s\n", msg);
-#endif
-}
-
-void log_b(char *prefix, unsigned char *buff, int n)
-{
-#ifdef DEBUG
-	int i;
-	printf("%s %3d:", prefix, n); for (i=0; i<n; i++) printf(" %02X", buf[i]); printf("\n");
-#endif
-}
 
 void error(char *msg) { log_s(msg); perror(msg); exit(1); }
 
@@ -50,8 +38,9 @@ void parse_buf(unsigned char *buf)
 
 void loop(int sockfd)
 {
-	int i, n;
-	uint16_t id;
+	 int16_t  i, n;
+	uint16_t  id;
+	uint16_t *ans = NULL;
 
 	int                in_addr_len;
 	struct sockaddr_in in_addr;
@@ -80,27 +69,46 @@ void loop(int sockfd)
 
 		id = *((uint16_t*)buf);
 
-		log_b("-->", buf, n);
+		log_b("Q-->", buf, n);
+
+		if (ans = (uint16_t *)cache_search(buf, &n))
+		{
+			ans[0] = id;
+			log_b("<--C", ans, n);
+		}
+		else
+			cache_question(buf, n);
 
 		// resend to parent
-		out_addr_len = sizeof(out_addr);
-		n = sendto(  out_socket, buf, n, 0, (struct sockaddr *) &out_addr,  out_addr_len);
-		if (n < 0) { log_s("ERROR in sendto");  }
-
-		int ck = 0;
-		while (++ck < 10)
+		if (!ans)
 		{
-			usleep(ck * 1000);
-			n = recvfrom(out_socket, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr *) &out_addr, &out_addr_len);
-			if (n < 0) continue;
+			out_addr_len = sizeof(out_addr);
+			n = sendto(out_socket, buf, n, 0, (struct sockaddr *) &out_addr,  out_addr_len);
+			if (n < 0) { log_s("ERROR in sendto");  }
 
-			log_b("<--", buf, n);
-			if (id != *((uint16_t*)buf)) continue;
+			int ck = 0;
+			while (++ck < 10)
+			{
+				usleep(ck * 1000);
+				n = recvfrom(out_socket, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr *) &out_addr, &out_addr_len);
+				if (n < 0) continue;
 
-			// send answer back
-			n = sendto(sockfd, buf, n, 0, (struct sockaddr *) &in_addr, in_addr_len);
+				cache_answer(buf, n);
+
+				log_b("<--P", buf, n);
+				if (id != *((uint16_t*)buf)) continue;
+
+				ans = (uint16_t*)buf;
+				break;
+			}
+			if (!ck) log_s("<--P no answer");
+		}
+
+		// send answer back
+		if (ans)
+		{
+			n = sendto(sockfd, ans, n, 0, (struct sockaddr *) &in_addr, in_addr_len);
 			if (n < 0) log_s("ERROR in sendto back");
-			break;
 		}
 	}
 }
