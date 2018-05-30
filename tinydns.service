@@ -1,0 +1,12 @@
+[Unit]
+Description=tiny DNS cache service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/tinydns -d
+KillMode=mixed
+Restart=on-failure
+Type=forking
+
+[Install]
+WantedBy=multi-user.target

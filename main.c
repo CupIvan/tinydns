@@ -5,8 +5,7 @@
 #include <arpa/inet.h>
 #include <unistd.h> // for usleep
 #include <stdlib.h> // for exit
-
-#define DEBUG
+#include <unistd.h> // for fork
 
 #define PORTNUM    53
 #define DNS_IP     "127.0.0.1"
@@ -117,6 +116,18 @@ int main(int argc, char **argv)
 {
 	int sockfd, n;
 	struct sockaddr_in serveraddr; /* server's addr */
+
+	if (argv[1] && 0 == strcmp(argv[1], "-d"))
+	{
+		pid_t pid = fork();
+		if (pid < 0)
+		{
+			if (pid < 0) error("Can't create daemon!");
+			exit(1);
+		}
+		if (pid > 0) exit(0); // exit from current process
+		g_debug = 0;
+	}
 
 	// create socket
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
