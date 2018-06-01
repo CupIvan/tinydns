@@ -7,12 +7,11 @@
 #include <stdlib.h> // for exit
 #include <unistd.h> // for fork
 
-#define PORTNUM    53
-#define DNS_IP     "127.0.0.1"
-#define DNS_PARENT "8.8.8.8"
+#define DNS_PORT 53
 
 #include "log.c"
 #include "cache.c"
+#include "config.c"
 
 unsigned char buf[0xFFF];
 
@@ -50,8 +49,8 @@ void loop(int sockfd)
 
 	memset((char *) &out_addr, 0, sizeof(out_addr));
 	out_addr.sin_family = AF_INET;
-	out_addr.sin_port   = htons(PORTNUM);
-	inet_aton(DNS_PARENT, (struct in_addr *)&out_addr.sin_addr.s_addr);
+	out_addr.sin_port   = htons(DNS_PORT);
+	inet_aton(config.dns, (struct in_addr *)&out_addr.sin_addr.s_addr);
 	out_socket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (out_socket < 0) error("ERROR opening socket out");
 
@@ -129,6 +128,8 @@ int main(int argc, char **argv)
 		g_debug = 0;
 	}
 
+	config_load();
+
 	// create socket
 	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0) error("ERROR opening socket");
@@ -143,9 +144,9 @@ int main(int argc, char **argv)
 
 	// bind
 	memset((char *) &serveraddr, 0, sizeof(serveraddr));
-	serveraddr.sin_family      = AF_INET;
-	inet_aton(DNS_IP, (struct in_addr *)&serveraddr.sin_addr.s_addr);
-	serveraddr.sin_port        = htons(PORTNUM);
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port   = htons(DNS_PORT);
+	inet_aton(config.server_ip, (struct in_addr *)&serveraddr.sin_addr.s_addr);
 	if (bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(struct sockaddr_in)) < 0)
 		error("ERROR on binding");
 
