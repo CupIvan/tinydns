@@ -3,4 +3,4 @@
 NAME="tinydns"
 
 rm -f $NAME
-gcc -o $NAME  main.c
+gcc -o $NAME main.c
