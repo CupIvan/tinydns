@@ -1,4 +1,4 @@
-// @url https://habr.com/post/346098/
+// @url RFC 1035 https://tools.ietf.org/html/rfc1035
 
 #include <stdio.h>
 #include <string.h>
@@ -12,27 +12,11 @@
 #include "log.c"
 #include "cache.c"
 #include "config.c"
+#include "parse.c"
 
 unsigned char buf[0xFFF];
 
 void error(char *msg) { log_s(msg); perror(msg); exit(1); }
-
-void parse_buf(unsigned char *buf)
-{
-	char *current = (char *)&buf[2*6];
-	char domain[255];
-
-	strcpy(domain, current); current = domain;
-
-	int n = domain[0];
-	while (n > 0)
-	{
-		current[0] = '.';
-		current += n + 1;
-		n = current[0];
-	}
-	log_s(domain);
-}
 
 void loop(int sockfd)
 {
@@ -63,7 +47,18 @@ void loop(int sockfd)
 		n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *) &in_addr, &in_addr_len);
 		if (n < 0) continue;
 
-		parse_buf(buf);
+		// clear Additional section, becouse of EDNS: OPTION-CODE=000A add random bytes to the end of the question
+		// EDNS: https://tools.ietf.org/html/rfc2671
+		TQuery* ptr = (TQuery*)buf;
+		if (ptr->ARCOUNT > 0)
+		{
+			ptr->ARCOUNT = 0;
+			i = sizeof(TQuery);
+			while (buf[i] && i < n) i += buf[i] + 1;
+			n = i + 1 + 4; // COMMENT: don't forget end zero and last 2 words
+		}
+
+		parse_buf((TQuery*)buf);
 
 		id = *((uint16_t*)buf);
 
