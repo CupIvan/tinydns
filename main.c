@@ -11,8 +11,8 @@
 
 #include "log.c"
 #include "cache.c"
-#include "config.c"
 #include "parse.c"
+#include "config.c"
 
 unsigned char buf[0xFFF];
 
@@ -49,16 +49,18 @@ void loop(int sockfd)
 
 		// clear Additional section, becouse of EDNS: OPTION-CODE=000A add random bytes to the end of the question
 		// EDNS: https://tools.ietf.org/html/rfc2671
-		TQuery* ptr = (TQuery*)buf;
+		THeader* ptr = (THeader*)buf;
 		if (ptr->ARCOUNT > 0)
 		{
 			ptr->ARCOUNT = 0;
-			i = sizeof(TQuery);
+			i = sizeof(THeader);
 			while (buf[i] && i < n) i += buf[i] + 1;
 			n = i + 1 + 4; // COMMENT: don't forget end zero and last 2 words
 		}
+		// also clear Z: it's strange, but dig util set it in 0x02
+		ptr->Z = 0;
 
-		parse_buf((TQuery*)buf);
+		parse_buf((THeader*)buf);
 
 		id = *((uint16_t*)buf);
 
