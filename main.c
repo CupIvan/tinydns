@@ -14,6 +14,8 @@
 #include "cache.c"
 #include "config.c"
 
+char version[] = "0.2";
+
 unsigned char buf[0xFFF];
 
 void error(char *msg) { log_s(msg); perror(msg); exit(1); }
@@ -112,6 +114,12 @@ int main(int argc, char **argv)
 {
 	int sockfd, n;
 	struct sockaddr_in serveraddr; /* server's addr */
+
+	if (argv[1] && 0 == strcmp(argv[1], "--version"))
+	{
+		printf("tinydns v%s\n", version);
+		exit(0);
+	}
 
 	if (argv[1] && 0 == strcmp(argv[1], "-d"))
 	{
