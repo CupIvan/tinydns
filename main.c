@@ -13,6 +13,7 @@
 #include "parse.c"
 #include "cache.c"
 #include "config.c"
+#include "help.c"
 
 char version[] = "0.2";
 
@@ -118,6 +119,12 @@ int main(int argc, char **argv)
 	if (argv[1] && 0 == strcmp(argv[1], "--version"))
 	{
 		printf("tinydns v%s\n", version);
+		exit(0);
+	}
+
+	if (argv[1] && 0 == strcmp(argv[1], "--help"))
+	{
+		help();
 		exit(0);
 	}
 
