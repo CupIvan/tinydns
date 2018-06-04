@@ -7,6 +7,7 @@ This is a tiny DNS server with simple JSON config written in C.
 * filesize is just only 20Kb!
 * cache DNS queries for boost internet connection
 * resolve own domains from config
+* resolve multidomains like *.example.com
 
 ## Compile and Install
 

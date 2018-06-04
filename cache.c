@@ -3,10 +3,16 @@
 typedef struct TCacheItem
 {
 	struct TCacheItem *next;
-	uint16_t          *que;
-	uint16_t          *ans;
-	uint16_t           n_que;
-	uint16_t           n_ans;
+	uint16_t  *que;
+	uint16_t  *ans;
+	uint16_t   n_que;
+	uint16_t   n_ans;
+	// num bytes before/after star
+	uint16_t   star_q_n1;
+	uint16_t   star_q_n2;
+	uint16_t   star_a_n1;
+	uint16_t   star_a_n2;
+	uint16_t  *ans_right;
 } TCacheItem;
 
 struct TCacheItem *cache      = NULL;
@@ -22,6 +28,12 @@ void* cache_question(void *buf, uint16_t n)
 	ptr->n_que = n;
 	memcpy(ptr->que, buf, n);
 
+	// search for star and calc part sizes
+	char *star_ptr;
+	star_ptr = (char*)ptr->que + sizeof(THeader);
+	while (*star_ptr) { if (star_ptr[0] == 1 && star_ptr[1] == '*')
+		{ ptr->star_q_n1 = star_ptr - (char*)ptr->que; ptr->star_q_n2 = n - ptr->star_q_n1 - 2; break; } star_ptr++; }
+
 	if (!cache) cache = cache_last = ptr;
 	else { cache_last->next = ptr; cache_last = ptr; }
 
@@ -32,6 +44,7 @@ int cache_answer(void *_buf, uint16_t n)
 {
 	uint16_t *buf = (uint16_t*)_buf;
 	struct TCacheItem *ptr = cache;
+	char     *star_ptr;
 
 	while (ptr)
 	{
@@ -41,6 +54,15 @@ int cache_answer(void *_buf, uint16_t n)
 			ptr->n_ans = n;
 			if (!ptr->ans) return 0;
 			memcpy(ptr->ans, buf, n);
+
+			// search for star and calc part sizes
+			star_ptr = (char*)ptr->ans + sizeof(THeader);
+			while (*star_ptr) { if (star_ptr[0] == 1 && star_ptr[1] == '*')
+				{ ptr->star_a_n1 = star_ptr - (char*)ptr->ans; ptr->star_a_n2 = n - ptr->star_a_n1 - 2;
+					if (ptr->ans_right = (uint16_t*)malloc(ptr->star_a_n2))
+						memcpy(ptr->ans_right, (char*)ptr->ans + ptr->star_a_n1 + 2, ptr->star_a_n2);
+					break; } star_ptr++; }
+
 			return 1;
 		}
 		ptr = ptr->next;
@@ -55,7 +77,26 @@ void* cache_search(void *_buf, uint16_t *n)
 
 	while (ptr)
 	{
-		if (memcmp(&buf[1], &ptr->que[1], *n) == 0)
+		if (ptr->star_q_n1 > 0)
+		{
+			int16_t mid_sz = *n - ptr->star_q_n1 - ptr->star_q_n2; // size of middle
+			if (mid_sz > 0)
+			if (memcmp(&buf[1], &ptr->que[1], ptr->star_q_n1 - 2) == 0) // left part
+			if (memcmp((char*)buf      + *n         - ptr->star_q_n2,
+			           (char*)ptr->que + ptr->n_que - ptr->star_q_n2, ptr->star_q_n2) == 0) // right part
+			{
+				*n = ptr->star_a_n1 + mid_sz + ptr->star_a_n2;
+				char *p = (char*)ptr->ans;
+				p += ptr->star_a_n1; // skip left part
+				// fill subdomain
+				memcpy(p, (char*)buf + ptr->star_q_n1, mid_sz); p += mid_sz;
+				// fill right part
+				memcpy(p, ptr->ans_right, ptr->star_a_n2);
+				return ptr->ans;
+			}
+		}
+		else
+		if (memcmp(&buf[1], &ptr->que[1], *n - 2) == 0)
 		{
 			*n = ptr->n_ans;
 			return ptr->ans;

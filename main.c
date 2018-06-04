@@ -10,8 +10,8 @@
 #define DNS_PORT 53
 
 #include "log.c"
-#include "cache.c"
 #include "parse.c"
+#include "cache.c"
 #include "config.c"
 
 unsigned char buf[0xFFF];
