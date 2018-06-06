@@ -118,7 +118,7 @@ int main(int argc, char **argv)
 
 	if (argv[1] && 0 == strcmp(argv[1], "--version"))
 	{
-		printf("tinydns v%s\n", version);
+		printf("tinydns %s\nAuthor: CupIvan <mail@cupivan.ru>\nLicense: MIT\n", version);
 		exit(0);
 	}
 
