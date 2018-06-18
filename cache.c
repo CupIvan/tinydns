@@ -77,6 +77,7 @@ void* cache_search(void *_buf, uint16_t *n)
 
 	while (ptr)
 	{
+		if (ptr->ans)
 		if (ptr->star_q_n1 > 0)
 		{
 			int16_t mid_sz = *n - ptr->star_q_n1 - ptr->star_q_n2; // size of middle

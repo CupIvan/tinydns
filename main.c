@@ -15,7 +15,7 @@
 #include "config.c"
 #include "help.c"
 
-char version[] = "0.2";
+char version[] = "0.2.1";
 
 unsigned char buf[0xFFF];
 
@@ -85,9 +85,11 @@ void loop(int sockfd)
 			if (n < 0) { log_s("ERROR in sendto");  }
 
 			int ck = 0;
-			while (++ck < 10)
+			uint32_t pow, i;
+			while (++ck < 13)
 			{
-				usleep(ck * 1000);
+				pow = 1; for (i=0; i<ck; i++) pow <<= 1;
+				usleep(pow * 1000);
 				n = recvfrom(out_socket, buf, sizeof(buf), MSG_DONTWAIT, (struct sockaddr *) &out_addr, &out_addr_len);
 				if (n < 0) continue;
 
