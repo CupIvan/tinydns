@@ -102,9 +102,43 @@ void loop(int sockfd)
 	}
 }
 
+#include <netdb.h>
+int hostname_to_ip(char *hostname, char *ip, int len)
+{
+	int sockfd;
+	struct addrinfo hints, *servinfo, *p;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	if (getaddrinfo(hostname, NULL, &hints, &servinfo) != 0) return 0;
+
+	for (p = servinfo; p != NULL; p = p->ai_next)
+	{
+		if (p->ai_family == AF_INET6)
+		{
+			struct sockaddr_in6 *serveraddr = (struct sockaddr_in6 *)p->ai_addr;
+			inet_ntop(AF_INET6, (struct in_addr *)&serveraddr->sin6_addr, ip, len);
+			break;
+		}
+		else
+		if (p->ai_family == AF_INET)
+		{
+			struct sockaddr_in *serveraddr = (struct sockaddr_in *)p->ai_addr;
+			inet_ntop(AF_INET, (struct in_addr *)&serveraddr->sin_addr, ip, len);
+		}
+	}
+	freeaddrinfo(servinfo);
+	return 1;
+}
+
 int server_init()
 {
 	int sock;
+
+	// convert domain to IP
+	char buf[0xFF];
+	if (hostname_to_ip(config.server_ip, buf, sizeof(buf)))
+		config.server_ip = buf;
 
 	// is ipv6?
 	int is_ipv6 = 0, i = 0;
@@ -143,6 +177,10 @@ int server_init()
 		if (bind(sock, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
 			error("ERROR on binding ipv4");
 	}
+
+	char s[0xFF];
+	sprintf(s, "bind on %s:%d", config.server_ip, DNS_PORT);
+	log_s(s);
 
 	return sock;
 }
