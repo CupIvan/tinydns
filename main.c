@@ -129,6 +129,8 @@ int main(int argc, char **argv)
 		}
 		if (pid > 0) exit(0); // exit from current process
 	}
+	else
+		config.debug_level = 1;
 
 	config_load();
 

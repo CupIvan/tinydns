@@ -9,6 +9,7 @@ typedef struct TConfig
 	char    *server_ip;
 	char    *dns;
 	uint32_t cache_time;
+	uint8_t  debug_level;
 	char    *data;
 } TConfig;
 

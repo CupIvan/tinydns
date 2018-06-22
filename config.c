@@ -76,6 +76,7 @@ void config_parse(char* s)
 		if (memcmp(ptr, "server_ip",   9) == 0) ptr = config_param(ptr, &config.server_ip,  CONFIG_TYPE_STRING);
 		if (memcmp(ptr, "dns",         3) == 0) ptr = config_param(ptr, &config.dns,        CONFIG_TYPE_STRING);
 		if (memcmp(ptr, "cache_time", 10) == 0) ptr = config_param(ptr, &config.cache_time, CONFIG_TYPE_INT);
+		if (memcmp(ptr, "debug_level",11) == 0) ptr = config_param(ptr, &config.debug_level,CONFIG_TYPE_INT);
 		if (memcmp(ptr, "rr",          2) == 0) ptr = config_param(ptr, NULL,               CONFIG_TYPE_RR);
 		ptr++;
 	}
