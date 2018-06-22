@@ -16,8 +16,8 @@ void loop(int sockfd)
 	uint16_t  id;
 	uint16_t *ans = NULL;
 
-	int                in_addr_len;
-	struct sockaddr_in in_addr;
+	int                 in_addr_len;
+	struct sockaddr_in6 in_addr;
 
 	int                out_socket;
 	int                out_addr_len;
@@ -102,11 +102,53 @@ void loop(int sockfd)
 	}
 }
 
+int server_init()
+{
+	int sock;
+
+	// is ipv6?
+	int is_ipv6 = 0, i = 0;
+	while (config.server_ip[i]) if (config.server_ip[i++] == ':') { is_ipv6 = 1; break; }
+
+	// create socket
+	sock = socket(is_ipv6 ? AF_INET6 : AF_INET, SOCK_DGRAM, 0);
+	if (sock < 0) error("ERROR opening socket");
+
+	/* setsockopt: Handy debugging trick that lets
+	* us rerun the server immediately after we kill it;
+	* otherwise we have to wait about 20 secs.
+	* Eliminates "ERROR on binding: Address already in use" error.
+	*/
+	int optval = 1;
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(optval));
+
+	// bind
+	if (is_ipv6)
+	{
+		struct sockaddr_in6 serveraddr;  /* server's addr */
+		memset((char *) &serveraddr, 0, sizeof(serveraddr));
+		serveraddr.sin6_family = AF_INET6;
+		serveraddr.sin6_port   = htons(DNS_PORT);
+		inet_pton(AF_INET6, config.server_ip, (struct in_addr *)&serveraddr.sin6_addr.s6_addr);
+		if (bind(sock, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
+			error("ERROR on binding ipv6");
+	}
+	else
+	{
+		struct sockaddr_in serveraddr;  /* server's addr */
+		memset((char *) &serveraddr, 0, sizeof(serveraddr));
+		serveraddr.sin_family = AF_INET;
+		serveraddr.sin_port   = htons(DNS_PORT);
+		inet_aton(config.server_ip, (struct in_addr *)&serveraddr.sin_addr.s_addr);
+		if (bind(sock, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
+			error("ERROR on binding ipv4");
+	}
+
+	return sock;
+}
+
 int main(int argc, char **argv)
 {
-	int sockfd, n;
-	struct sockaddr_in serveraddr; /* server's addr */
-
 	if (argv[1] && 0 == strcmp(argv[1], "--version"))
 	{
 		printf("tinydns %s\nAuthor: CupIvan <mail@cupivan.ru>\nLicense: MIT\n", version);
@@ -134,25 +176,7 @@ int main(int argc, char **argv)
 
 	config_load();
 
-	// create socket
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sockfd < 0) error("ERROR opening socket");
-
-	/* setsockopt: Handy debugging trick that lets
-	* us rerun the server immediately after we kill it;
-	* otherwise we have to wait about 20 secs.
-	* Eliminates "ERROR on binding: Address already in use" error.
-	*/
-	int optval = 1;
-	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(optval));
-
-	// bind
-	memset((char *) &serveraddr, 0, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port   = htons(DNS_PORT);
-	inet_aton(config.server_ip, (struct in_addr *)&serveraddr.sin_addr.s_addr);
-	if (bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(struct sockaddr_in)) < 0)
-		error("ERROR on binding");
+	int sockfd = server_init();
 
 	loop(sockfd);
 }

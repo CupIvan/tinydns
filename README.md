@@ -8,6 +8,7 @@ This is a tiny DNS server with simple JSON config written in C.
 * cache DNS queries for boost internet connection
 * resolve own domains from config
 * resolve multidomains like *.example.com
+* server can work on IPv6 address
 
 ## Compile and Install
 
