@@ -1,17 +1,8 @@
-#define CONFIG_TYPE_STRING 1
-#define CONFIG_TYPE_INT    2
-#define CONFIG_TYPE_RR     3
-
-typedef struct TConfig
-{
-	char    *server_ip;
-	char    *dns;
-	uint32_t cache_time;
-	char    *data;
-} TConfig;
+#include "common.h"
 
 TConfig config = {"127.0.0.1", "8.8.8.8", 6*3600};
-char    rr_buf[0xFFF] = {0};
+
+char rr_buf[0xFFF] = {0};
 
 char* config_param(char* s, void* res, uint type)
 {
@@ -103,7 +94,7 @@ void config_load()
 	rewind(f);
 
 	config.data = (char*)malloc(fsize);
-	if (!config.data) exit(1);
+	if (!config.data) error("Can't allocate memory for config!");
 
 	fread(config.data, 1, fsize, f);
 	fclose(f);

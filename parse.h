@@ -1,3 +1,5 @@
+#include <arpa/inet.h> // for uint16_t
+
 #define OPCODE_STANDART     0
 #define OPCODE_REVERSE      1
 #define OPCODE_SERVER_STATE 2
@@ -63,3 +65,5 @@ typedef struct __attribute__((__packed__))
 	uint16_t NSCOUNT;
 	uint16_t ARCOUNT;
 } THeader;
+
+void parse_buf(THeader *buf);

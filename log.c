@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int g_debug = 1;
 
 void log_s(char *msg)

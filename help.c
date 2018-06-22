@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 void help()
 {
 	printf("tinydns - small proxy DNS server.\n");

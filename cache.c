@@ -1,6 +1,7 @@
-#include <stdlib.h>     /* realloc, free, exit, NULL */
-
 #include <time.h>
+
+#include "common.h"
+
 uint32_t getTimestamp()
 {
 	return (uint32_t)time(0);

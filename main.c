@@ -1,21 +1,8 @@
 // @url RFC 1035 https://tools.ietf.org/html/rfc1035
 
-#include <stdio.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <unistd.h> // for usleep
-#include <stdlib.h> // for exit
-#include <unistd.h> // for fork
+#include "common.h"
 
 #define DNS_PORT 53
-
-#include "parse.h"
-#include "cache.h"
-#include "log.c"
-#include "config.c"
-#include "parse.c"
-#include "cache.c"
-#include "help.c"
 
 char version[] = "0.2.1";
 
@@ -141,7 +128,6 @@ int main(int argc, char **argv)
 			exit(1);
 		}
 		if (pid > 0) exit(0); // exit from current process
-		g_debug = 0;
 	}
 
 	config_load();

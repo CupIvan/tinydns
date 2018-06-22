@@ -1,3 +1,5 @@
+#include "common.h"
+
 void parse_buf(THeader *buf)
 {
 	char domain[255];
