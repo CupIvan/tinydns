@@ -9,10 +9,12 @@
 
 #define DNS_PORT 53
 
+#include "parse.h"
+#include "cache.h"
 #include "log.c"
+#include "config.c"
 #include "parse.c"
 #include "cache.c"
-#include "config.c"
 #include "help.c"
 
 char version[] = "0.2.1";
@@ -48,7 +50,7 @@ void loop(int sockfd)
 		// receive datagram
 		in_addr_len = sizeof(in_addr);
 		n = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *) &in_addr, &in_addr_len);
-		if (n < 0) continue;
+		if (n < 1) continue;
 
 		// clear Additional section, becouse of EDNS: OPTION-CODE=000A add random bytes to the end of the question
 		// EDNS: https://tools.ietf.org/html/rfc2671

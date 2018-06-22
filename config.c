@@ -4,12 +4,13 @@
 
 typedef struct TConfig
 {
-	char *server_ip;
-	char *dns;
-	char *data;
+	char    *server_ip;
+	char    *dns;
+	uint32_t cache_time;
+	char    *data;
 } TConfig;
 
-TConfig config = {"127.0.0.1", "8.8.8.8"};
+TConfig config = {"127.0.0.1", "8.8.8.8", 6*3600};
 char    rr_buf[0xFFF] = {0};
 
 char* config_param(char* s, void* res, uint type)
@@ -22,7 +23,7 @@ char* config_param(char* s, void* res, uint type)
 	{
 		switch (state)
 		{
-			case 1: if (*s == ':') { state = (type==2)?5:2; }         break;
+			case 1: if (*s == ':') { state = (type==CONFIG_TYPE_INT)?5:2; } break;
 			case 2: if (*s == '"') { state = 3; *(char**)res = s+1; } break;
 			case 3: if (*s == '"') { state = 4; *s = 0; }             break;
 			case 4: return s;
@@ -81,9 +82,10 @@ void config_parse(char* s)
 	char* ptr = s;
 	while (*ptr)
 	{
-		if (memcmp(ptr, "server_ip", 9) == 0) ptr = config_param(ptr, &config.server_ip, CONFIG_TYPE_STRING);
-		if (memcmp(ptr, "dns",       3) == 0) ptr = config_param(ptr, &config.dns,       CONFIG_TYPE_STRING);
-		if (memcmp(ptr, "rr",        2) == 0) ptr = config_param(ptr, NULL,              CONFIG_TYPE_RR);
+		if (memcmp(ptr, "server_ip",   9) == 0) ptr = config_param(ptr, &config.server_ip,  CONFIG_TYPE_STRING);
+		if (memcmp(ptr, "dns",         3) == 0) ptr = config_param(ptr, &config.dns,        CONFIG_TYPE_STRING);
+		if (memcmp(ptr, "cache_time", 10) == 0) ptr = config_param(ptr, &config.cache_time, CONFIG_TYPE_INT);
+		if (memcmp(ptr, "rr",          2) == 0) ptr = config_param(ptr, NULL,               CONFIG_TYPE_RR);
 		ptr++;
 	}
 }

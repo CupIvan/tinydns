@@ -1,19 +1,10 @@
 #include <stdlib.h>     /* realloc, free, exit, NULL */
 
-typedef struct TCacheItem
+#include <time.h>
+uint32_t getTimestamp()
 {
-	struct TCacheItem *next;
-	uint16_t  *que;
-	uint16_t  *ans;
-	uint16_t   n_que;
-	uint16_t   n_ans;
-	// num bytes before/after star
-	uint16_t   star_q_n1;
-	uint16_t   star_q_n2;
-	uint16_t   star_a_n1;
-	uint16_t   star_a_n2;
-	uint16_t  *ans_right;
-} TCacheItem;
+	return (uint32_t)time(0);
+}
 
 struct TCacheItem *cache      = NULL;
 struct TCacheItem *cache_last = NULL;
@@ -26,13 +17,22 @@ void* cache_question(void *buf, uint16_t n)
 	memset(ptr, 0, sizeof(TCacheItem));
 	ptr->  que = (uint16_t*)(ptr + 1);
 	ptr->n_que = n;
+	ptr->timestamp = getTimestamp();
 	memcpy(ptr->que, buf, n);
 
 	// search for star and calc part sizes
 	char *star_ptr;
 	star_ptr = (char*)ptr->que + sizeof(THeader);
-	while (*star_ptr) { if (star_ptr[0] == 1 && star_ptr[1] == '*')
-		{ ptr->star_q_n1 = star_ptr - (char*)ptr->que; ptr->star_q_n2 = n - ptr->star_q_n1 - 2; break; } star_ptr++; }
+	while (*star_ptr)
+	{
+		if (star_ptr[0] == 1 && star_ptr[1] == '*')
+		{
+			ptr->star_q_n1 = star_ptr - (char*)ptr->que;
+			ptr->star_q_n2 = n - ptr->star_q_n1 - 2;
+			break;
+		}
+		star_ptr++;
+	}
 
 	if (!cache) cache = cache_last = ptr;
 	else { cache_last->next = ptr; cache_last = ptr; }
@@ -54,14 +54,20 @@ int cache_answer(void *_buf, uint16_t n)
 			ptr->n_ans = n;
 			if (!ptr->ans) return 0;
 			memcpy(ptr->ans, buf, n);
-
 			// search for star and calc part sizes
 			star_ptr = (char*)ptr->ans + sizeof(THeader);
-			while (*star_ptr) { if (star_ptr[0] == 1 && star_ptr[1] == '*')
-				{ ptr->star_a_n1 = star_ptr - (char*)ptr->ans; ptr->star_a_n2 = n - ptr->star_a_n1 - 2;
+			while (*star_ptr)
+			{
+				if (star_ptr[0] == 1 && star_ptr[1] == '*')
+				{
+					ptr->star_a_n1 = star_ptr - (char*)ptr->ans;
+					ptr->star_a_n2 = n - ptr->star_a_n1 - 2;
 					if (ptr->ans_right = (uint16_t*)malloc(ptr->star_a_n2))
 						memcpy(ptr->ans_right, (char*)ptr->ans + ptr->star_a_n1 + 2, ptr->star_a_n2);
-					break; } star_ptr++; }
+					break;
+				}
+				star_ptr++;
+			}
 
 			return 1;
 		}
@@ -73,10 +79,32 @@ int cache_answer(void *_buf, uint16_t n)
 void* cache_search(void *_buf, uint16_t *n)
 {
 	uint16_t *buf = (uint16_t*)_buf;
-	struct TCacheItem *ptr = cache;
-
+	struct TCacheItem *ptr      = cache;
+	struct TCacheItem *ptr_prev = NULL;
+	struct TCacheItem *ptr_tmp  = NULL;
+	uint32_t time = getTimestamp();
 	while (ptr)
 	{
+		if (config.cache_time)
+		if (time - ptr->timestamp > config.cache_time)
+		{
+			ptr_tmp = ptr->next;
+			if (ptr_prev == NULL)
+			{
+				cache = ptr->next;
+				if (ptr->ans) free(ptr->ans);
+				free(ptr);
+			}
+			else
+			{
+				ptr_prev->next = ptr->next;
+				if (ptr->ans) free(ptr->ans);
+				free(ptr);
+			}
+			ptr = ptr_tmp;
+			continue;
+		}
+
 		if (ptr->ans)
 		if (ptr->star_q_n1 > 0)
 		{
@@ -102,6 +130,7 @@ void* cache_search(void *_buf, uint16_t *n)
 			*n = ptr->n_ans;
 			return ptr->ans;
 		}
+		ptr_prev = ptr;
 		ptr = ptr->next;
 	}
 	return NULL;
