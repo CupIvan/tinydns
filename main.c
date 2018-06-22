@@ -4,7 +4,7 @@
 
 #define DNS_PORT 53
 
-char version[] = "0.2.1";
+char version[] = "0.3";
 
 unsigned char buf[0xFFF];
 
