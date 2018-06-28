@@ -49,7 +49,7 @@ int cache_answer(void *_buf, uint16_t n)
 
 	while (ptr)
 	{
-		if (buf[0] == ptr->que[0])
+		if (buf[0] == ptr->que[0]) // FIXME: also need to compare domain becouse of collision
 		{
 			ptr->  ans = (uint16_t*)malloc(n);
 			ptr->n_ans = n;
@@ -69,6 +69,9 @@ int cache_answer(void *_buf, uint16_t n)
 				}
 				star_ptr++;
 			}
+			// clear uid
+			ptr->que[0] = 0;
+			ptr->ans[0] = 0;
 
 			return 1;
 		}
