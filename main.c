@@ -25,7 +25,7 @@ void loop(int sockfd)
 
 	memset((char *) &out_addr, 0, sizeof(out_addr));
 	out_addr.sin_family = AF_INET;
-	out_addr.sin_port   = htons(DNS_PORT);
+	out_addr.sin_port   = htons(config.dns_port);
 	inet_aton(config.dns, (struct in_addr *)&out_addr.sin_addr.s_addr);
 	out_socket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (out_socket < 0) error("ERROR opening socket out");
@@ -162,7 +162,7 @@ int server_init()
 		struct sockaddr_in6 serveraddr;  /* server's addr */
 		memset((char *) &serveraddr, 0, sizeof(serveraddr));
 		serveraddr.sin6_family = AF_INET6;
-		serveraddr.sin6_port   = htons(DNS_PORT);
+		serveraddr.sin6_port   = htons(config.server_port);
 		inet_pton(AF_INET6, config.server_ip, (struct in_addr *)&serveraddr.sin6_addr.s6_addr);
 		if (bind(sock, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
 			error("ERROR on binding ipv6");
@@ -172,14 +172,15 @@ int server_init()
 		struct sockaddr_in serveraddr;  /* server's addr */
 		memset((char *) &serveraddr, 0, sizeof(serveraddr));
 		serveraddr.sin_family = AF_INET;
-		serveraddr.sin_port   = htons(DNS_PORT);
+		serveraddr.sin_port   = htons(config.server_port);
 		inet_aton(config.server_ip, (struct in_addr *)&serveraddr.sin_addr.s_addr);
+		printf("bind on %s:%d; parent: %s:%d\n", config.server_ip, config.server_port,config.dns,config.dns_port);
 		if (bind(sock, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0)
 			error("ERROR on binding ipv4");
 	}
 
 	char s[0xFF];
-	sprintf(s, "bind on %s:%d", config.server_ip, DNS_PORT);
+	sprintf(s, "bind on %s:%d", config.server_ip, config.server_port);
 	log_s(s);
 
 	return sock;

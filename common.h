@@ -3,6 +3,7 @@
 #include <arpa/inet.h> // for inet_aton
 #include <unistd.h> // for usleep, fork
 #include <stdlib.h> // for exit
+#include <stdio.h>
 
 #include "config.h"
 #include "parse.h"
