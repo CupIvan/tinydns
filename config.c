@@ -4,7 +4,7 @@ TConfig config = {"127.0.0.1", "8.8.8.8", 6*3600};
 
 char rr_buf[0xFFF] = {0};
 
-char* config_param(char* s, void* res, uint type)
+char* config_param(char* s, void* res, unsigned int type)
 {
 	THeader *rr = (THeader*)rr_buf; rr->QRCOUNT = htons(1);
 	char   *rr_ptr, *rr_dot;
